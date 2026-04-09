@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>蓮之空 Icon 生成器</title>
+    <title>蓮ノ空アイコンメーカー</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         :root {
@@ -11,7 +11,7 @@
             --hasu-light: #fdf2f8;
         }
         body {
-            font-family: "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif;
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
             background-color: var(--hasu-light);
             display: flex;
             flex-direction: column;
@@ -20,7 +20,8 @@
             margin: 0;
             color: #333;
         }
-        h1 { color: var(--hasu-pink); margin-bottom: 10px; font-size: 1.5rem; }
+        h1 { color: var(--hasu-pink); margin-bottom: 5px; font-size: 1.4rem; }
+        .sub-title { font-size: 0.9rem; color: #666; margin-bottom: 20px; text-align: center; line-height: 1.4; }
         
         .canvas-wrapper {
             background: white;
@@ -46,7 +47,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; color: var(--hasu-pink); }
 
         input[type="file"] { width: 100%; font-size: 14px; }
 
@@ -78,15 +79,18 @@
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(244, 114, 182, 0.4);
+            margin-top: 10px;
         }
         .btn-download:active { transform: scale(0.98); }
 
-        .hint { font-size: 12px; color: #888; margin-top: 5px; }
+        .hint { font-size: 11px; color: #888; margin-top: 5px; line-height: 1.4; }
+        .footer-note { font-size: 10px; color: #999; margin-top: 20px; text-align: center; }
     </style>
 </head>
 <body>
 
-    <h1>蓮之空 Icon 生成器</h1>
+    <h1>蓮ノ空アイコンメーカー</h1>
+    <div class="sub-title">公式配布のフレームを使って<br>自分だけのアイコンを作成しましょう！</div>
 
     <div class="canvas-wrapper">
         <canvas id="mainCanvas" width="400" height="400"></canvas>
@@ -94,34 +98,42 @@
 
     <div class="controls">
         <div class="section">
-            <label>1. 選擇你的照片</label>
+            <label>STEP 1. 画像を選択</label>
             <input type="file" id="imageUpload" accept="image/*">
-            <div class="hint">上傳後可直接在畫布上拖動或縮放照片</div>
+            <div class="hint">アップロード後、画像をドラッグして位置調整、ピンチ操作で拡大縮小が可能です。</div>
         </div>
 
         <div class="section">
-            <label>2. 選擇官方邊框</label>
+            <label>STEP 2. フレームを選択</label>
             <div class="frame-grid">
-                <button class="btn-frame" onclick="applyFrame('frame1.PNG')">邊框 1</button>
-                <button class="btn-frame" onclick="applyFrame('frame2.png')">邊框 2</button>
-                <button class="btn-frame" onclick="applyFrame('frame3.png')">邊框 3</button>
+                <button class="btn-frame" onclick="applyFrame('frame1.PNG')">フレーム 1</button>
+                <button class="btn-frame" onclick="applyFrame('frame2.PNG')">フレーム 2</button>
+                <button class="btn-frame" onclick="applyFrame('frame3.PNG')">フレーム 3</button>
             </div>
         </div>
 
-        <button class="btn-download" onclick="saveIcon()">下載 Icon 成品</button>
-        <div class="hint" style="text-align: center;">建議使用 Chrome 或 Safari 瀏覽器以獲得最佳體驗</div>
+        <button class="btn-download" onclick="saveIcon()">アイコンを保存する</button>
+        
+        <div class="section" style="background: none; box-shadow: none; padding: 0;">
+            <div class="hint">
+                ※保存時に枠線が消える場合は、もう一度「保存」ボタンを押してください。<br>
+                ※当ツールはファンによる非公式ツールです。
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        ©プロジェクトラブライブ！蓮ノ空女学院スクールアイドルクラブ
     </div>
 
     <script>
-        // 初始化畫布
         const canvas = new fabric.Canvas('mainCanvas', {
-            preserveObjectStacking: true // 確保層級不會因為點選而亂掉
+            preserveObjectStacking: true
         });
 
         let userImg = null;
         let frameImg = null;
 
-        // 處理照片上傳
         document.getElementById('imageUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -129,22 +141,12 @@
             const reader = new FileReader();
             reader.onload = function(event) {
                 fabric.Image.fromURL(event.target.result, function(img) {
-                    // 如果原本有照片就先刪除
                     if (userImg) canvas.remove(userImg);
-                    
                     userImg = img;
-                    
-                    // 自動縮放照片到適合大小
                     img.scaleToWidth(400);
-                    
                     canvas.add(img);
-                    
-                    // 【關鍵】強制把照片送到最底層
                     img.sendToBack();
-                    
-                    // 如果已經有邊框，確保邊框在最上面
                     if (frameImg) frameImg.bringToFront();
-                    
                     canvas.setActiveObject(img);
                     canvas.renderAll();
                 });
@@ -152,15 +154,10 @@
             reader.readAsDataURL(file);
         });
 
-        // 處理套用邊框
         function applyFrame(fileName) {
             fabric.Image.fromURL(fileName, function(img) {
-                // 如果原本有邊框就先刪除
                 if (frameImg) canvas.remove(frameImg);
-                
                 frameImg = img;
-                
-                // 設定邊框屬性：不可選取、不可移動、點擊穿透
                 img.set({
                     left: 0,
                     top: 0,
@@ -169,27 +166,19 @@
                     scaleX: canvas.width / img.width,
                     scaleY: canvas.height / img.height
                 });
-                
                 canvas.add(img);
-                
-                // 【關鍵】強制把邊框拉到最頂層
                 img.bringToFront();
-                
                 canvas.renderAll();
             }, { crossOrigin: 'anonymous' });
         }
 
-        // 下載成品
         function saveIcon() {
-            // 下載前取消選取框，避免選取框的虛線被拍進去
             canvas.discardActiveObject().renderAll();
-            
             const dataURL = canvas.toDataURL({
                 format: 'png',
                 quality: 1,
-                multiplier: 2 // 下載雙倍清晰度
+                multiplier: 2
             });
-            
             const link = document.createElement('a');
             link.download = 'hasunosora_icon.png';
             link.href = dataURL;
