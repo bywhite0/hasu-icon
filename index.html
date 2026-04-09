@@ -90,7 +90,7 @@
 <body>
 
     <h1>蓮ノ空アイコンメーカー</h1>
-    <div class="sub-title">公式配布のフレームを使って<br>自分だけのアイコンを作成しましょう！</div>
+    <div class="sub-title">様々なフレームを使って<br>自分だけのアイコンを作成しましょう！</div>
 
     <div class="canvas-wrapper">
         <canvas id="mainCanvas" width="400" height="400"></canvas>
@@ -106,9 +106,18 @@
         <div class="section">
             <label>STEP 2. フレームを選択</label>
             <div class="frame-grid">
-                <button class="btn-frame" onclick="applyFrame('frame1.PNG')">フレーム 1</button>
-                <button class="btn-frame" onclick="applyFrame('frame2.PNG')">フレーム 2</button>
-                <button class="btn-frame" onclick="applyFrame('frame3.PNG')">フレーム 3</button>
+                <button class="btn-frame" onclick="applyFrame('/frames/bgp.png')">B. G. P.</button>
+                <button class="btn-frame" onclick="applyFrame('/frames/kaho.png')">花帆</button>
+                <button class="btn-frame" onclick="applyFrame('/frames/sayaka.png')">さやか</button>
+                <button class="btn-frame" onclick="applyFrame('/frames/kozue.png')">梢</button>
+                <button class="btn-frame" onclick="applyFrame('/frames/tsuzuri.png')">綴理</button>
+                <button class="btn-frame" onclick="applyFrame('/frames/rurino.png')">瑠璃乃</button>
+                <button class="btn-frame" onclick="applyFrame('/frames/megumi.png')">慈</button>
+                <button class="btn-frame" onclick="applyFrame('/frames/ginko.png')">吟子</button>
+                <button class="btn-frame" onclick="applyFrame('/frames/kosuzu.png')">小鈴</button>
+                <button class="btn-frame" onclick="applyFrame('/frames/hime.png')">姫芽</button>
+                <button class="btn-frame" onclick="applyFrame('/frames/izumi.png')">泉</button>
+                <button class="btn-frame" onclick="applyFrame('/frames/ceras.png')">セラス</button>
             </div>
         </div>
 
@@ -180,7 +189,7 @@
                 multiplier: 2
             });
             const link = document.createElement('a');
-            link.download = 'hasunosora_icon.png';
+            link.download = 'output_icon.png';
             link.href = dataURL;
             link.click();
         }
