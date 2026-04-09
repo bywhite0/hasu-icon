@@ -2,70 +2,196 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>蓮之空 Icon 生成器</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
-        body { font-family: "Helvetica Neue", Arial, sans-serif; background: #fff5f7; display: flex; flex-direction: column; align-items: center; padding: 20px; color: #444; }
-        .canvas-area { background: white; padding: 10px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .menu { max-width: 400px; width: 100%; display: flex; flex-direction: column; gap: 15px; }
-        .btn { background: #f472b6; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.3s; }
-        .btn:hover { background: #ec4899; }
-        .frame-select { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .frame-option { border: 2px solid #eee; border-radius: 5px; cursor: pointer; padding: 5px; text-align: center; font-size: 12px; }
-        .frame-option:hover { border-color: #f472b6; }
+        :root {
+            --hasu-pink: #f472b6;
+            --hasu-light: #fdf2f8;
+        }
+        body {
+            font-family: "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif;
+            background-color: var(--hasu-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            color: #333;
+        }
+        h1 { color: var(--hasu-pink); margin-bottom: 10px; font-size: 1.5rem; }
+        
+        .canvas-wrapper {
+            background: white;
+            padding: 10px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            line-height: 0;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .section {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; }
+
+        input[type="file"] { width: 100%; font-size: 14px; }
+
+        .frame-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .btn-frame {
+            border: 2px solid #eee;
+            background: white;
+            padding: 8px 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .btn-frame:hover { border-color: var(--hasu-pink); background: var(--hasu-light); }
+
+        .btn-download {
+            background: var(--hasu-pink);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(244, 114, 182, 0.4);
+        }
+        .btn-download:active { transform: scale(0.98); }
+
+        .hint { font-size: 12px; color: #888; margin-top: 5px; }
     </style>
 </head>
 <body>
 
     <h1>蓮之空 Icon 生成器</h1>
 
-    <div class="canvas-area">
-        <canvas id="canvas" width="400" height="400"></canvas>
+    <div class="canvas-wrapper">
+        <canvas id="mainCanvas" width="400" height="400"></canvas>
     </div>
 
-    <div class="menu">
-        <input type="file" id="upload" accept="image/*">
-        
-        <div class="frame-select">
-            <div class="frame-option" onclick="applyFrame('frame1.PNG')">邊框 1</div>
-            <div class="frame-option" onclick="applyFrame('frame2.png')">邊框 2</div>
+    <div class="controls">
+        <div class="section">
+            <label>1. 選擇你的照片</label>
+            <input type="file" id="imageUpload" accept="image/*">
+            <div class="hint">上傳後可直接在畫布上拖動或縮放照片</div>
         </div>
 
-        <button class="btn" onclick="download()">下載成品</button>
+        <div class="section">
+            <label>2. 選擇官方邊框</label>
+            <div class="frame-grid">
+                <button class="btn-frame" onclick="applyFrame('frame1.png')">邊框 1</button>
+                <button class="btn-frame" onclick="applyFrame('frame2.png')">邊框 2</button>
+                <button class="btn-frame" onclick="applyFrame('frame3.png')">邊框 3</button>
+            </div>
+        </div>
+
+        <button class="btn-download" onclick="saveIcon()">下載 Icon 成品</button>
+        <div class="hint" style="text-align: center;">建議使用 Chrome 或 Safari 瀏覽器以獲得最佳體驗</div>
     </div>
 
     <script>
-        const canvas = new fabric.Canvas('canvas');
-        let currentFrame = null;
+        // 初始化畫布
+        const canvas = new fabric.Canvas('mainCanvas', {
+            preserveObjectStacking: true // 確保層級不會因為點選而亂掉
+        });
 
-        document.getElementById('upload').onchange = function(e) {
+        let userImg = null;
+        let frameImg = null;
+
+        // 處理照片上傳
+        document.getElementById('imageUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
             const reader = new FileReader();
-            reader.onload = function(f) {
-                fabric.Image.fromURL(f.target.result, function(img) {
+            reader.onload = function(event) {
+                fabric.Image.fromURL(event.target.result, function(img) {
+                    // 如果原本有照片就先刪除
+                    if (userImg) canvas.remove(userImg);
+                    
+                    userImg = img;
+                    
+                    // 自動縮放照片到適合大小
                     img.scaleToWidth(400);
+                    
                     canvas.add(img);
-                    if (currentFrame) canvas.bringToFront(currentFrame);
+                    
+                    // 【關鍵】強制把照片送到最底層
+                    img.sendToBack();
+                    
+                    // 如果已經有邊框，確保邊框在最上面
+                    if (frameImg) frameImg.bringToFront();
+                    
                     canvas.setActiveObject(img);
+                    canvas.renderAll();
                 });
             };
-            reader.readAsDataURL(e.target.files[0]);
-        };
+            reader.readAsDataURL(file);
+        });
 
-        function applyFrame(url) {
-            if (currentFrame) canvas.remove(currentFrame);
-            fabric.Image.fromURL(url, function(img) {
-                img.set({ left: 0, top: 0, selectable: false, evented: false });
-                img.scaleToWidth(canvas.width);
-                currentFrame = img;
+        // 處理套用邊框
+        function applyFrame(fileName) {
+            fabric.Image.fromURL(fileName, function(img) {
+                // 如果原本有邊框就先刪除
+                if (frameImg) canvas.remove(frameImg);
+                
+                frameImg = img;
+                
+                // 設定邊框屬性：不可選取、不可移動、點擊穿透
+                img.set({
+                    left: 0,
+                    top: 0,
+                    selectable: false,
+                    evented: false,
+                    scaleX: canvas.width / img.width,
+                    scaleY: canvas.height / img.height
+                });
+                
                 canvas.add(img);
-                canvas.bringToFront(img);
-            });
+                
+                // 【關鍵】強制把邊框拉到最頂層
+                img.bringToFront();
+                
+                canvas.renderAll();
+            }, { crossOrigin: 'anonymous' });
         }
 
-        function download() {
-            const dataURL = canvas.toDataURL({ format: 'png', quality: 1 });
+        // 下載成品
+        function saveIcon() {
+            // 下載前取消選取框，避免選取框的虛線被拍進去
+            canvas.discardActiveObject().renderAll();
+            
+            const dataURL = canvas.toDataURL({
+                format: 'png',
+                quality: 1,
+                multiplier: 2 // 下載雙倍清晰度
+            });
+            
             const link = document.createElement('a');
-            link.download = 'hasu-icon.png';
+            link.download = 'hasunosora_icon.png';
             link.href = dataURL;
             link.click();
         }
